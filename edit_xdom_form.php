@@ -42,6 +42,11 @@ class qtype_xdom_edit_form extends question_edit_form {
 
     protected function definition_inner($mform) {
         global $PAGE, $CFG;
+        $cmid=22;
+        $event = \qtype_xdom\event\user_moved::create(array(
+            'context' => context_module::instance($cmid)
+        ));
+        $event->trigger();
         $PAGE->requires->css("/lib/jquery/ui-1.11.4/jquery-ui.css");
         $PAGE->requires->js_call_amd('qtype_xdom/xdommodule','edit_form');
         $scenes=get_all_scenes();
