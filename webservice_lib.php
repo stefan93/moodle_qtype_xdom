@@ -58,6 +58,29 @@ class x3domAjaxController extends external_api {
         );
     }
 
+    public static function saveCords_parameters() {
+        return new external_function_parameters(
+            array('x' => new external_value(PARAM_FLOAT,'X koordinata',VALUE_REQUIRED),
+                'y' => new external_value(PARAM_FLOAT,'Y koordinata',VALUE_REQUIRED),
+                'z' => new external_value(PARAM_FLOAT,'Z koordinata',VALUE_REQUIRED),)
+        );
+    }
+    public static function saveCords($x,$y,$z) {
+        //Parameter validation
+        //REQUIRED
+        $params = self::validate_parameters(self::saveCords_parameters(),
+            array('x' => $x,'y' => $y,'z' => $z));
+        $event = \qtype_xdom\event\user_moved::create(array(
+            'context' => context_module::instance(7),'other'=>array('x'=>$params['x'], 'y'=>$params['y'], 'z'=>$params['z'])
+        ));
+        $event->trigger();
+        return true;
+
+    }
+    public static function saveCords_returns() {
+        return new external_value(PARAM_BOOL,'Boolean vrednost koja oznacava ispravnost akcije',VALUE_REQUIRED);
+    }
+
     public static function saveNewShapesOnScene_parameters() {
         return new external_function_parameters(
             array(
