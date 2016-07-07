@@ -24,7 +24,16 @@ $functions = array(
         'description' => 'Cuvanje trenutno editovanje scene',
         'type'        => 'read',
         'ajax'        => true,
+    ),
+    'saveCoords' => array(
+        'classname'   => 'x3domAjaxController',
+        'methodname'  => 'saveCoords',
+        'classpath'   => 'question/type/xdom/webservice_lib.php',
+        'description' => 'Trigeruje event koji salje kordinate',
+        'type'        => 'create',
+        'ajax'        => true,
     )
+
 );
 // We define the services to install as pre-build services. A pre-build service is not editable by administrator.
 $services = array(
