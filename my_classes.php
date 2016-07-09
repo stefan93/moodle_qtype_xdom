@@ -18,15 +18,31 @@ class Scene {
         $this->id = $id;
     }
     private function _loadBackgoundSceneX3D() {
-        global $DB;
-        $temp = $DB->get_record_sql('SELECT scenebackgroundxdom,{qtype_xdom_scenebackground}.name
+        global $DB,$PAGE;
+        $temp = $DB->get_record_sql('SELECT zipfilename,{qtype_xdom_scenebackground}.name,{qtype_xdom_scenebackground}.id
         FROM {qtype_xdom_scenebackground}
         JOIN {qtype_xdom_scenes}
         ON {qtype_xdom_scenes}.scenebackground={qtype_xdom_scenebackground}.id
         WHERE {qtype_xdom_scenes}.id=?
         ', array($this->id));
-        $this->background_scene_x3d = $temp->scenebackgroundxdom;
         $this->name = $temp->name;
+        $fs = get_file_storage();
+        $fileinfo = array(
+            'contextid' => CONTEXT_MODULE, // ID of context
+            'component' => 'qtype_xdom',     // usually = component name
+            'filearea' => 'qtype_xdom_scenebackground',     // usually = table name
+            'itemid' => $temp->id,               // usually = ID of row in table
+            'filepath' => '/x3d/',           // any path beginning and ending in /
+            'filename' => $temp->zipfilename); // any filename
+        $file = $fs->get_file($fileinfo['contextid'], $fileinfo['component'], $fileinfo['filearea'],
+            $fileinfo['itemid'], $fileinfo['filepath'], $fileinfo['filename']);
+        if ($file) {
+            $contents = $file->get_content();
+            $this->background_scene_x3d = $contents;
+        } else {
+            throw new file_exception('Doslo je do greske. Nema trazene scene.Kontekst:'.$PAGE->context->id);
+        }
+
     }
     private function _loadName() {
         global $DB;
@@ -105,7 +121,9 @@ class Scene {
             $sceneWithShapes->getElementByTagName('scene')->innertext.=$shape_html;
             $shape_html->clear();
         }
-        return $sceneWithShapes;
+        $a=$sceneWithShapes->save();
+        $sceneWithShapes->clear();
+        return $a;
     }
     static public function getAllScenes() {
         global $DB;

@@ -27,7 +27,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'qtype_xdom';
-$plugin->version   = 2016052918;
+$plugin->version   = 2016073018;
 
 $plugin->requires  = 2012062504;
 
