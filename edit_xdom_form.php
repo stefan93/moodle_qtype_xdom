@@ -42,11 +42,20 @@ class qtype_xdom_edit_form extends question_edit_form {
 
     protected function definition_inner($mform) {
         global $PAGE, $CFG;
-        $cmid=22;
         $event = \qtype_xdom\event\user_moved::create(array(
-            'context' => context_module::instance($cmid)
+            'context' => context_module::instance(22)
         ));
-        $event->trigger();
+        //$event->trigger();
+        //izbrisi_file("helikopter.x3d","3");
+       // ubaci_fajl("C:\\wamp/www/modeli/novo/example.html");
+        //ubaci_folder("C:\\wamp/www/modeli/novo/binGeo/","/binGeo/");
+        $fileinfo = array(
+            'contextid' => CONTEXT_MODULE, // ID of context
+            'component' => 'qtype_xdom',     // usually = component name
+            'filearea' => 'qtype_xdom_scenebackground',     // usually = table name
+            'itemid' => 3,               // usually = ID of row in table
+            'filepath' => '/x3d/',           // any path beginning and ending in /
+            'filename' => 'helikopter.x3d'); // any filee
         $PAGE->requires->css("/lib/jquery/ui-1.11.4/jquery-ui.css");
         $PAGE->requires->js_call_amd('qtype_xdom/xdommodule','edit_form');
         $scenes=get_all_scenes();
@@ -71,11 +80,13 @@ class qtype_xdom_edit_form extends question_edit_form {
                 $shapes_html.="<option value='$shape->id_for_response' $selected>$shape->name</option>";
             }
         } else {
-            $sceneid=array_keys($scenes)[0]; // prva scena u nizu scena
-            $scena=new Scene($sceneid);
-            $shapes=$scena->getShapes();
-            foreach($shapes as $shape) {
-                $shapes_html.="<option value='$shape->id_for_response'>$shape->name</option>";
+            if (!is_null($scenes)) { // ako ima scena u bazi
+                $sceneid=array_keys($scenes)[0]; // prva scena u nizu scena
+                $scena=new Scene($sceneid);
+                $shapes=$scena->getShapes();
+                foreach($shapes as $shape) {
+                    $shapes_html.="<option value='$shape->id_for_response'>$shape->name</option>";
+                }
             }
         }
         $window=<<< EOT
@@ -116,7 +127,31 @@ class qtype_xdom_edit_form extends question_edit_form {
             </div>
           </div>
           <div id="fragment-3">
-            trecaa strana
+          <div id="fragment-3-content">
+          <div id="scenes">
+            <h1>Scene</h1>
+            <div class='btn' onclick='sceneAddSceneDlg()'>Dodaj scenu</div>
+            <table id="tableScenes">
+                <thead>
+                </thead>
+            </table>
+            </div>
+            <div id="shapes">
+            <h1>Predmeti</h1>
+            <div class='btn' onclick='shapeAddShapeDlg()'>Dodaj predmet</div>
+            <table id="tableShapes">
+                <thead>
+                </thead>
+            </table>
+            </div>
+            <div id="backgroundScenes">
+            <h1>Pozadinske scene</h1>
+            <div class='btn' onclick='shapeAddBSceneDlg()'>Dodaj pozadinksu scenu</div>
+            <table id="tableBScenes">
+                <thead>
+                </thead>
+            </table>
+            </div>
           </div>
         </div>
 EOT;
@@ -128,7 +163,7 @@ EOT;
             $mform->addElement('hidden','correctshape',$prvi_shape->id_for_response);
             $mform->setType('correctshape',PARAM_INT);
             $mform->addRule('correctshape','Morate da izaberete tacan odgovor','required',null,'server');
-            $mform->addElement('hidden','sceneid',$sceneid);
+            $mform->addElement('hidden','sceneid',isset($sceneid) ? $sceneid : -1);
             $mform->setType('sceneid',PARAM_INT);
             $mform->addRule('sceneid','Morate da izaberete scenu','required',null,'server');
         $mform->closeHeaderBefore('xdomsettings');

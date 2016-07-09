@@ -67,7 +67,7 @@ class qtype_xdom_renderer extends qtype_renderer {
                     $question->get_validation_error(array('answer' => $currentanswer)),
                     array('class' => 'validationerror'));
         }*/
-        $scene->clear();
+        //$scene->clear();
         unset($scene);
         return $result;
     }

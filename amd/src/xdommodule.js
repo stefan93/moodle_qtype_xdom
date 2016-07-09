@@ -12,19 +12,19 @@ require.config({
     enforceDefine: false,
     paths: {
         "x3dom": [
-            "http://www.x3dom.org/x3dom/release/x3dom",
+           // "http://www.x3dom.org/x3dom/release/x3dom",
             "http://localhost/moodle/question/type/xdom/lib/x3dom"
         ],
         "jquery-ui/menu": [
             "http://localhost/moodle/question/type/xdom/lib/jquery.contextMenu"
+        ],
+        "jquery.datatables": [
+            "http://localhost/moodle/question/type/xdom/lib/datatables.min"
         ]
     },
     shim: {
         'x3dom': {
             exports: 'x3dom'
-        },
-        "jquery-ui/menu": {
-            deps: ["jquery"]
         }
     }
 });
@@ -57,11 +57,52 @@ define(['x3dom','jquery','jqueryui','jquery-ui/menu'], function(x3dom,$) {
             $('#choosenshape').val($(shape).attr("def"));
         }
     }
+    function getCoords(xKoor, yKoor, zKoor, struk){
+        struk.x = xKoor;
+        struk.y = yKoor;
+        struk.z = zKoor;
+    }
+
+    function sendCoords(evt){
+        if(evt){
+            var coordinates = {
+                x:'xKoor',
+                y:'yKoor',
+                z:'zKoor'
+            };
+            var pos = evt.position;
+            var x = pos.x.toFixed(4);
+            var y = pos.y.toFixed(4);
+            var z = pos.z.toFixed(4);
+            getCoords(x,y,z,coordinates);
+            tekst=JSON.stringify(coordinates);
+            //kod za slanje
+            require(['core/ajax'], function (ajax) {
+                var promises = ajax.call([
+                    {methodname: 'saveCoords', args: {x: x, y: y,  z: z }}
+                ]);
+                promises[0].done(function (response) {
+                    console.log('Done',response);
+                }).fail(function (ex) {
+                    alert('Doslo je do greske. Scena nije sacuvana.');
+                    console.log(ex);
+                });
+            });
+        }
+    }
     var x={
         init : function() {
-            document.onload = function() {
+            window.onload = function() {
+
+
                 var scene=$("Scene");
                 scene.attr('onclick', 'handleGroupClick(event)');
+
+                scene.append($("<viewpoint orientation='-0.21 0.97 0.0644 0.59193' position='45.15 0.42 5.11813'></viewpoint>"));
+
+                var viewpointNode = document.getElementsByTagName('viewpoint')[0];
+                viewpointNode.addEventListener('viewpointChanged',sendCoords, false);
+
                 window.handleGroupClick = handleGroupClick;
                 $("transform").each(function() {
                     $(this).attr("onclick", "handleSingleClick(this)");
@@ -70,6 +111,9 @@ define(['x3dom','jquery','jqueryui','jquery-ui/menu'], function(x3dom,$) {
                 if (!$('#marker').length) {
                     scene.append('<Transform id="marker" scale=".15 .15 .15" translation="100 0 0"> <Shape><Appearance><Material diffuseColor="#FFD966"></Material></Appearance><Sphere></Sphere></Shape></Transform>');
                 }
+                window.getCoords = getCoords;
+                window.sendCoords = sendCoords;
+
         };
         },
         ui : function() {
@@ -151,7 +195,7 @@ define(['x3dom','jquery','jqueryui','jquery-ui/menu'], function(x3dom,$) {
                                                 $(value).attr('onmousedown','startDragging(this,event);').attr('onclick','shapeContextMenu(this,event);');
                                         });
                                         $('#scena').empty().append(r);
-                                        x3dom.reload();
+                                        //x3dom.reload();
                                     }).fail(function (ex) {
                                         console.log(ex);
                                     });
@@ -239,6 +283,155 @@ define(['x3dom','jquery','jqueryui','jquery-ui/menu'], function(x3dom,$) {
                                     });
                                 });
                                 break;
+                            case '#fragment-3':
+                                require(['core/ajax'], function (ajax) {
+                                    var scenesDiv = $("#scenes");
+                                    var shapesDiv = $("#shapes");
+                                    var bScenesDiv = $("#backgroundScenes");
+                                    var fr3Content = $("#fragment-3-content");
+                                    //fr3Content.hide();
+                                    var promises = ajax.call([
+                                        {
+                                            methodname: 'qtypeManagment',
+                                            args: {type: 'get_all_scenes'}
+                                        },
+                                        {
+                                            methodname: 'qtypeManagment',
+                                            args: {type: 'get_all_shapes'}
+                                        },
+                                        {
+                                            methodname: 'qtypeManagment',
+                                            args: {type: 'get_all_backgroundscenes'}
+                                        }
+                                    ]);
+                                    require(['jquery.datatables'], function() {
+                                        var table = $('#tableScenes').dataTable( {
+                                            "searching": false,
+                                            "ajax": function(data, callback, settings) {
+                                                promises[1].done(function (response) {
+                                                    response.data = Object.keys(response.data).map(function (key) {return response.data[key]});
+                                                    callback(response);
+                                                }).fail(function (ex) {
+                                                    alert("Doslo je do greske.");
+                                                    console.log(ex);
+                                                });
+                                            },
+                                            "lengthChange": false,
+                                            "columns": [
+                                                {
+                                                    "sortable": true,
+                                                    "title": 'Naziv',
+                                                    render: function(o) { return o; }
+                                                },
+                                                {
+                                                    "sortable": false,
+                                                    render: function (o) { return '<div class="btn" onclick="sceneEditById(this)" data-role="scene-delete-by-id" data-id="'+o+'">Izmeni</div>'; }
+                                                },
+                                                {
+                                                    "sortable": false,
+                                                    render: function (o) { return '<div class="btn" onclick="sceneDelById(this)" data-role="scene-delete-by-id" data-id="'+o+'">Izbrisi</div>'; }
+                                                }
+                                            ]
+                                        } );
+                                    });
+                                    /*
+                                    promises[0].done(function (response) {
+                                        var dataScenes = [];
+                                        $.map(response.rows, function(item, index) {
+                                            dataScenes.push([item,index,index]);
+                                        });
+                                        require(['jquery.datatables'], function() {
+                                            var table = $('#tableScenes').dataTable( {
+                                                "searching": false,
+                                                "data": dataScenes,
+                                                "lengthChange": false,
+                                                "columns": [
+                                                    {
+                                                        "sortable": true,
+                                                        "title": 'Naziv',
+                                                        render: function(o) { return o; }
+                                                    },
+                                                    {
+                                                        "sortable": false,
+                                                        render: function (o) { return '<div class="btn" onclick="sceneEditById(this)" data-role="scene-delete-by-id" data-id="'+o+'">Izmeni</div>'; }
+                                                    },
+                                                    {
+                                                        "sortable": false,
+                                                        render: function (o) { return '<div class="btn" onclick="sceneDelById(this)" data-role="scene-delete-by-id" data-id="'+o+'">Izbrisi</div>'; }
+                                                    }
+                                                ]
+                                            } );
+                                        });
+                                    }).fail(function (ex) {
+                                        alert("Doslo je do greske.");
+                                        console.log(ex);
+                                    });
+                                    promises[1].done(function(response) {
+                                        var dataShapes = [];
+                                        $.map(response.rows, function(item, index) {
+                                            dataShapes.push([item,index,index]);
+                                        });
+                                        require(['jquery.datatables'], function() {
+                                            var table = $('#tableShapes').dataTable( {
+                                                "searching": false,
+                                                "data": dataShapes,
+                                                "lengthChange": false,
+                                                "columns": [
+                                                    {
+                                                        "sortable": true,
+                                                        "title": 'Naziv',
+                                                        render: function(o) { return o; }
+                                                    },
+                                                    {
+                                                        "sortable": false,
+                                                        render: function (o) { return '<div class="btn" onclick="shapeEditById(this)" data-role="shape-delete-by-id" data-id="'+o+'">Izmeni</div>'; }
+                                                    },
+                                                    {
+                                                        "sortable": false,
+                                                        render: function (o) { return '<div class="btn" onclick="shapeDelById(this)" data-role="shape-delete-by-id" data-id="'+o+'">Izbrisi</div>'; }
+                                                    }
+                                                ]
+                                            } );
+                                        });
+                                    }).fail(function(ex) {
+                                        alert("Doslo je do greske.");
+                                        console.log(ex);
+                                    });
+
+                                    promises[2].done(function(response) {
+                                        var dataBScenes = [];
+                                        $.map(response.rows, function(item, index) {
+                                            dataBScenes.push([item,index,index]);
+                                        });
+                                        require(['jquery.datatables'], function() {
+                                            var table = $('#tableBScenes').dataTable( {
+                                                "searching": false,
+                                                "data": dataBScenes,
+                                                "lengthChange": false,
+                                                "columns": [
+                                                    {
+                                                        "sortable": true,
+                                                        "title": 'Naziv',
+                                                        render: function(o) { return o; }
+                                                    },
+                                                    {
+                                                        "sortable": false,
+                                                        render: function (o) { return '<div class="btn" onclick="bSceneEditById(this)" data-role="bScene-delete-by-id" data-id="'+o+'">Izmeni</div>'; }
+                                                    },
+                                                    {
+                                                        "sortable": false,
+                                                        render: function (o) { return '<div class="btn" onclick="bSceneDelById(this)" data-role="bScene-delete-by-id" data-id="'+o+'">Izbrisi</div>'; }
+                                                    }
+                                                ]
+                                            } );
+                                        });
+                                        fr3Content.show();
+                                    }).fail(function(ex) {
+                                        alert("Doslo je do greske.");
+                                        console.log(ex);
+                                    });*/
+                                });
+                                break;
                             default :
                         }
                     }
@@ -315,6 +508,25 @@ define(['x3dom','jquery','jqueryui','jquery-ui/menu'], function(x3dom,$) {
                 );
             };
             window.shapeContextMenu=shapeContextMenu;
+
+            // funkcije za scene managment
+            window.sceneDelById = function(o) {
+                var sceneId = o.getAttribute('data-id');
+                require(['core/ajax'], function (ajax) {
+                    var promises = ajax.call([
+                        {
+                            methodname: 'qtypeManagment',
+                            args: {type: 'delete-scene-by-id', id: sceneId}
+                        }
+                    ]);
+
+                    promises[0].done(function (response) {
+                        alert("Trazena scene je obrisana.");
+                    }).fail(function (ex) {
+                        console.log(ex);
+                    });
+                });
+            };
         // Za pomeranje shape-ova
             var cellSize = 1.0;
 

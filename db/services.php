@@ -32,13 +32,21 @@ $functions = array(
         'description' => 'Trigeruje event koji salje kordinate',
         'type'        => 'create',
         'ajax'        => true,
+    ),
+    'qtypeManagment' => array(
+        'classname'   => 'x3domAjaxController',
+        'methodname'  => 'qtypeManagment',
+        'classpath'   => 'question/type/xdom/webservice_lib.php',
+        'description' => 'Funkcije u vezi managment tab-a',
+        'type'        => 'read',
+        'ajax'        => true,
     )
 
 );
 // We define the services to install as pre-build services. A pre-build service is not editable by administrator.
 $services = array(
     'x3domWebService' => array(
-        'functions' => array ('getPosAnsForScene','getSceneX3d','saveNewShapesOnScene'),
+        'functions' => array ('getPosAnsForScene','getSceneX3d','saveNewShapesOnScene','qtypeManagment'),
         'requiredcapability' => '',
         'restrictedusers' => 0,
         'enabled'=>1,
