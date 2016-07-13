@@ -40,13 +40,21 @@ $functions = array(
         'description' => 'Funkcije u vezi managment tab-a',
         'type'        => 'read',
         'ajax'        => true,
+    ),
+    'saveNewComponent' => array(
+        'classname'   => 'x3domAjaxController',
+        'methodname'  => 'saveNewComponent',
+        'classpath'   => 'question/type/xdom/webservice_lib.php',
+        'description' => 'Sacuvaj novu komponentu(scene, BScene ili shape)',
+        'type'        => 'write',
+        'ajax'        => true,
     )
 
 );
 // We define the services to install as pre-build services. A pre-build service is not editable by administrator.
 $services = array(
     'x3domWebService' => array(
-        'functions' => array ('getPosAnsForScene','getSceneX3d','saveNewShapesOnScene','saveCoords','qtypeManagment'),
+        'functions' => array ('getPosAnsForScene','getSceneX3d','saveNewShapesOnScene','saveCoords','qtypeManagment','saveNewComponent'),
         'requiredcapability' => '',
         'restrictedusers' => 0,
         'enabled'=>1,

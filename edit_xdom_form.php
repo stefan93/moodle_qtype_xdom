@@ -58,7 +58,7 @@ class qtype_xdom_edit_form extends question_edit_form {
             'filename' => 'helikopter.x3d'); // any filee
         $PAGE->requires->css("/lib/jquery/ui-1.11.4/jquery-ui.css");
         $PAGE->requires->js_call_amd('qtype_xdom/xdommodule','edit_form');
-        $scenes=get_all_scenes();
+        $scenes=get_all_scenes_id_name();
         $oldscene=-1;
         if(isset($this->question->id)) {
             $oldscene=$this->question->options->scene;
@@ -130,7 +130,7 @@ class qtype_xdom_edit_form extends question_edit_form {
           <div id="fragment-3-content">
           <div id="scenes">
             <h1>Scene</h1>
-            <div class='btn' onclick='sceneAddSceneDlg()'>Dodaj scenu</div>
+            <div id='scenes-btn'>Dodaj scenu</div>
             <table id="tableScenes">
                 <thead>
                 </thead>
@@ -138,7 +138,7 @@ class qtype_xdom_edit_form extends question_edit_form {
             </div>
             <div id="shapes">
             <h1>Predmeti</h1>
-            <div class='btn' onclick='shapeAddShapeDlg()'>Dodaj predmet</div>
+            <div id='shapes-btn'>Dodaj predmet</div>
             <table id="tableShapes">
                 <thead>
                 </thead>
@@ -146,11 +146,21 @@ class qtype_xdom_edit_form extends question_edit_form {
             </div>
             <div id="backgroundScenes">
             <h1>Pozadinske scene</h1>
-            <div class='btn' onclick='shapeAddBSceneDlg()'>Dodaj pozadinksu scenu</div>
+            <div id='backgroundScenes-btn'>Dodaj pozadinksu scenu</div>
             <table id="tableBScenes">
                 <thead>
                 </thead>
             </table>
+            </div>
+			<div id="form">
+                <fieldset>
+                    <label for="name">Naziv</label>
+                    <input type="text" name="name" id="name"  class="text ui-widget-content ui-corner-all">
+                    <label for="data">Scena</label>
+                    <div id='editing'></div>
+                     <!-- Allow form submission with keyboard without duplicating the dialog button -->
+                    <input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
+                </fieldset>
             </div>
           </div>
         </div>
@@ -167,6 +177,11 @@ EOT;
             $mform->setType('sceneid',PARAM_INT);
             $mform->addRule('sceneid','Morate da izaberete scenu','required',null,'server');
         $mform->closeHeaderBefore('xdomsettings');
+        //$mform->addElement('header','fileUpload','Dodavanje fajlova');
+        //$mform->addElement('filepicker', 'userfile',"Fajl", null, array('maxbytes' => 150000, 'accepted_types' => '.zip'));
+        //$mform->addElement('file', 'userfile', get_string('attachment', 'forum'));
+        //$mform->closeHeaderBefore('fileUpload');
+
     }
 
     protected function data_preprocessing($question) {

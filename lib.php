@@ -59,9 +59,13 @@ function qtype_xdom_pluginfile($course, $cm, $context, $filearea, $args, $forced
     send_stored_file($file);
 }
 
-function get_all_scenes() {
+function get_all_scenes_id_name() {
     global $DB;
     return $DB->get_records_menu('qtype_xdom_scenes',NULL,NULL,'id,name');
+}
+function get_all_scenes() {
+    global $DB;
+    return $DB->get_records_sql("SELECT * FROM mdl_qtype_xdom_scenes");
 }
 function get_all_shapes() {
     global $DB;
@@ -77,9 +81,13 @@ function get_shapes_from_scene($scene_id) {
                                   INNER JOIN mdl_qtype_xdom_sceneshapes ON mdl_qtype_xdom_shapes.id = mdl_qtype_xdom_sceneshapes.shape
                                   WHERE scene=?',array($scene_id));
 }
-function get_all_background_scenes() {
+function get_all_background_scenes_id_name() {
     global $DB;
     return $DB->get_records_menu('qtype_xdom_scenebackground',NULL,NULL,'id,name');
+}
+function get_all_background_scenes() {
+    global $DB;
+    return $DB->get_records_sql("SELECT * FROM mdl_qtype_xdom_scenebackground");
 }
 function ubaci_folder($dir,$filepath) {
     $fs = get_file_storage();
@@ -116,15 +124,64 @@ function izbrisi_file($filename,$itemid) {
         $fileinfo['itemid'], $fileinfo['filepath'], $fileinfo['filename']);
     return $file;
 }
-function ubaci_fajl($externalfilepath) {
+function ubaci_fajl($name, $data,$id) {
     $fs = get_file_storage();
     $fileinfo = array(
         'contextid' => CONTEXT_MODULE, // ID of context
         'component' => 'qtype_xdom',     // usually = component name
         'filearea' => 'qtype_xdom_scenebackground',     // usually = table name
-        'itemid' => 3,               // usually = ID of row in table
+        'itemid' => $id,               // usually = ID of row in table
         'filepath' => '/x3d/',           // any path beginning and ending in /
-        'filename' => 'helikopter.x3d'); // any filename
-    $file = $fs->create_file_from_pathname($fileinfo,$externalfilepath);
+        'filename' => "$name.x3d"); // any filename
+    //$file = $fs->create_file_from_pathname($fileinfo,$externalfilepath);
+    $file = $fs->create_file_from_string($fileinfo,$data);
     return $file;
+}
+function save_new_scene($name, $data) {
+    global $DB;
+    $dataObj = new StdClass;
+    $dataObj->name = $name;
+    $dataObj->scenebackground = $data;
+    return $DB->insert_record('qtype_xdom_scenes',$dataObj);
+}
+function save_new_shape($name, $data){
+    global $DB;
+    $dataObj = new StdClass;
+    $dataObj->name = $name;
+    $dataObj->scenebackground = $data;
+    return $DB->insert_record('qtype_xdom_shapes',$dataObj);
+}
+function save_new_background_scene($name, $data){
+    global $DB;
+    $ok = null;
+    try {
+        $dataObj = new StdClass();
+        $dataObj->name = $name;
+        $dataObj->zipfilename = $name.'.x3d';
+        $id = $DB->insert_record("qtype_xdom_scenebackground", $dataObj);
+        if (is_number($id)) {
+            $ok = ubaci_fajl($name, $data, $id);
+            return true;
+        } else {
+            return false;
+        }
+    } catch (Exception $e) {
+        return false;
+    }
+}
+function delete_scene($id) {
+    global $DB;
+    try {
+        return $DB->delete_records('qtype_xdom_scenes',array('id'=>$id));
+    } catch(Exception $e) {
+        return false;
+    }
+}
+function delete_shape($id) {
+    global $DB;
+    try {
+        return $DB->delete_records('qtype_xdom_shapes',array('id'=>$id));
+    } catch(Exception $e) {
+        return false;
+    }
 }
