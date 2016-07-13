@@ -19,7 +19,6 @@
 		<TABLE NAME="qtype_xdom_scenebackground" COMMENT="Store background scenes in x3dom">
 			<FIELDS>
 				<FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" />
-				<FIELD NAME="scenebackgroundxdom" TYPE="text" NOTNULL="true" SEQUENCE="false"/>
 				<FIELD NAME="timeadded" TYPE="datetime" NOTNULL="true" DEFAULT="NOW()" SEQUENCE="false"/>
 				<FIELD NAME="name" TYPE="text" NOTNULL="true" SEQUENCE="false"/>
 				<FIELD NAME="zipfilename" TYPE="text" NOTNULL="true" SEQUENCE="false"/>
