@@ -79,8 +79,11 @@ class x3domAjaxController extends external_api
         //REQUIRED
         $params = self::validate_parameters(self::saveCoords_parameters(),
             array('x' => $x, 'y' => $y, 'z' => $z));
+        $cmid=required_param('cmid', PARAM_INT);
+        $objectid=required_param('attempt', PARAM_INT);
         $event = \qtype_xdom\event\user_moved::create(array(
-            'context' => context_module::instance(7), 'other' => array('x' => $params['x'], 'y' => $params['y'], 'z' => $params['z'])
+            'context' => context_module::instance($cmid), 'other' => array('x' => $params['x'], 'y' => $params['y'], 'z' => $params['z']),
+            'objectid' => $objectid
         ));
         $event->trigger();
         return true;
