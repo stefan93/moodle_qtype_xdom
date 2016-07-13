@@ -132,15 +132,16 @@ class x3domAjaxController extends external_api
     public static function qtypeManagment_parameters()
     {
         return new external_function_parameters(
-            array('type' => new external_value(PARAM_TEXT, 'Koja se operacija radi"', VALUE_REQUIRED))
+            array('type' => new external_value(PARAM_TEXT, 'Koja se operacija radi"', VALUE_REQUIRED),
+            'id' => new external_value(PARAM_INT, 'Id u vezi', VALUE_OPTIONAL))
         );
     }
-    public static function qtypeManagment($type)
+    public static function qtypeManagment($type,$id)
     {
         //Parameter validation
         //REQUIRED
         $params = self::validate_parameters(self::qtypeManagment_parameters(),
-            array('type' => $type));
+            array('type' => $type, 'id' => $id));
         switch ($params['type']) {
             case 'get_all_scenes':
                 $result['data'] = get_all_scenes();
@@ -150,6 +151,15 @@ class x3domAjaxController extends external_api
                 break;
             case 'get_all_backgroundscenes':
                 $result['data'] = get_all_background_scenes();
+                break;
+            case 'delete_scene_by_id':
+                $result = delete_scene($params['id']);
+                break;
+            case 'delete_shape_by_id':
+                $result = delete_shape($params['id']);
+                break;
+            case 'delete_bscene_by_id':
+                throw new UnexpectedValueException("Not yet implemented");
                 break;
             default:
                 $result = "";
@@ -166,5 +176,41 @@ class x3domAjaxController extends external_api
                 )
             )
         );
+    }
+
+    public static function saveNewComponent_parameters()
+    {
+        return new external_function_parameters(
+            array(
+                'type' => new external_value(PARAM_TEXT,'tip nove komponente',VALUE_REQUIRED),
+                'data' => new external_value(PARAM_RAW, 'X3d koji treba da se cuva', VALUE_REQUIRED),
+                'name' => new external_value(PARAM_TEXT, 'naziv nove komponente', VALUE_REQUIRED)
+            )
+        );
+    }
+    public static function saveNewComponent($type, $data, $name)
+    {
+        //Parameter validation
+        //REQUIRED
+        $params = self::validate_parameters(self::saveNewComponent_parameters(),
+            array('type' => $type,'data' => $data, 'name' => $name, ));
+        $ok=false;
+        switch($type) {
+            case 'scene':
+                $ok = save_new_scene($params['name'],$params['data']);
+                break;
+            case 'backgroundScene':
+                $ok = save_new_background_scene($params['name'],$params['data']);
+                break;
+            case 'shape':
+                $ok = save_new_shape($params['name'],$params['data']);
+                break;
+            default:
+        }
+        return $ok;
+    }
+    public static function saveNewComponent_returns()
+    {
+        return new external_value(PARAM_BOOL, 'Boolean vrednost koja oznacava ispravnost akcije', VALUE_REQUIRED);
     }
 }
